@@ -1,3 +1,7 @@
+#Tkinter
+import threading
+import tkinter as tk
+
 # REST API
 from flask import Flask, render_template, request, jsonify, make_response
 import requests
@@ -171,6 +175,71 @@ def get_bookings_by_userid(userid):
       return make_response(jsonify({"error": "Error in service booking"}), 500)
 
 
+def login():
+    global var_userid
+    var_userid = entry.get()  # Récupérer l'ID utilisateur
+    if var_userid:  # Vérifie si un ID utilisateur a été entré
+        root.destroy()  # Fermer la fenêtre actuelle et ouvrir l'interface principale
+        start_tkinter_app()
+
+# start flask app
+def run_flask_app():
+    app.run(host=HOST, port=PORT)
+
+# start graphical interface
+def start_tkinter_app():
+    global listbox, entry, status_label, root, var_userid
+    var_userid = var_userid if 'var_userid' in globals() else ""
+    
+    root = tk.Tk()
+
+    if var_userid == "":  # Si aucun ID utilisateur, afficher l'écran de connexion
+        root.title("Login")
+
+        frame = tk.Frame(root)
+        frame.pack(pady=20)
+
+        entry_label = tk.Label(frame, text="Enter User ID:")
+        entry_label.grid(row=0, column=0)
+        entry = tk.Entry(frame)
+        entry.grid(row=0, column=1)
+
+        login_button = tk.Button(frame, text="Login", command=login)
+        login_button.grid(row=0, column=2, padx=10)
+
+    else:  # Une fois connecté, afficher l'interface principale
+        root.title("Movies Showtime App")
+
+        frame = tk.Frame(root)
+        frame.pack(pady=20)
+
+        entry_label = tk.Label(frame, text="Enter Date (YYYY-MM-DD):")
+        entry_label.grid(row=0, column=0)
+        entry = tk.Entry(frame)
+        entry.grid(row=0, column=1)
+
+        fetch_button = tk.Button(frame, text="Get Movies By Date")# , command=fetch_movies)
+        fetch_button.grid(row=0, column=2, padx=10)
+
+        listbox = tk.Listbox(root, width=50, height=10)
+        listbox.pack(pady=10)
+
+        all_showtimes_button = tk.Button(root, text="Get All Showtimes")#, command=fetch_showtimes)
+        all_showtimes_button.pack(pady=10)
+
+        status_label = tk.Label(root, text="", fg="red")
+        status_label.pack()
+
+    root.mainloop()
+
+
+# Main code to run both Flask and Tkinter
 if __name__ == "__main__":
-   print("Server running in port %s"%(PORT))
-   app.run(host=HOST, port=PORT)
+    # start the Flask thread
+    flask_thread = threading.Thread(target=run_flask_app)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # start the Tkinter thread
+    start_tkinter_app()
+
