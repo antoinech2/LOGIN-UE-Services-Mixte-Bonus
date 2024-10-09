@@ -1,0 +1,356 @@
+openapi: 3.0.3
+info:
+  title: User Service API
+  description: API documentation for the User Service.
+  contact:
+    name: Jean-Baptiste Lambertin
+    email: jean-baptiste.lambertin@imt-atlantique.fr
+  version: 1.0.0
+tags:
+  - name: Admin
+    description: Endpoints restricted to admin-only operations.
+  - name: User
+    description: Endpoints for standard user operations.
+
+paths:
+  /:
+    get:
+      tags:
+        - User
+      summary: Home Page
+      description: Displays a welcome message for the User Service.
+      operationId: getHomePage
+      responses:
+        "200":
+          description: Welcome message.
+          content:
+            text/html:
+              schema:
+                type: string
+                example: <h1 style='color:blue'>Welcome to the User Service!</h1>
+                
+  /users:
+    get:
+      tags:
+        - Admin
+      summary: Get All Users
+      description: Retrieves a list of all registered users.
+      operationId: get_users
+      responses:
+        "200":
+          description: List of all users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  
+  /users/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get User by ID
+      description: Retrieves a specific user by user ID.
+      operationId: get_user_by_userid
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserId'
+      responses:
+        "200":
+          description: User found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"User not found"}
+
+  /create_booking/{userId}:
+    post:
+      tags:
+        - User
+      summary: Create a Booking for User
+      description: Creates a new booking for a specified user by user ID.
+      operationId: create_booking_by_userid
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user.
+          schema:
+            $ref: "#/components/schemas/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+      responses:
+        "200":
+          description: Booking created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"No date provided"}
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"Internal server error"}
+                
+  /bookings/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get User Bookings
+      description: Retrieves the booking details for a specific user by user ID.
+      operationId: get_bookings_by_userid
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserId'
+      responses:
+        "200":
+          description: List of bookings for the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBookings'
+        "400":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"Bad request"}
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"Internal server error"}
+                
+  /available_bookings:
+    post:
+      tags:
+        - User
+      summary: Get Available Bookings for a Date
+      description: Retrieves available booking options for a user on a specified date.
+      operationId: get_available_bookings()
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Date'
+      responses:
+        "200":
+          description: List of available bookings for the user on the given date.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableBooking'
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"No date provided"}
+        "404":
+          description: No available bookings found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"No available bookings found"}
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"Internal server error"}
+                
+  /movie_info:
+    get:
+      tags:
+        - User
+      summary: Get Movie Information
+      description: Retrieves information about all movies (excluding movie IDs).
+      operationId: get_movie_info
+      responses:
+        "200":
+          description: List of movie information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieInfo'
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"No title provided"}
+        "404":
+          description: No movie found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"No movie found"}
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: {"error":"Internal server error"}
+
+components:
+  schemas:
+    UserBookings:
+      required:
+        - userId
+        - bookings
+      type: object
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserId'
+        bookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingDetails'
+            
+    BookingDetails:
+      required:
+        - date
+        - movies
+      type: object
+      properties:
+        date:
+          $ref: '#/components/schemas/Date'
+        movies:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieId'
+            
+    Booking:
+      required:
+        - date
+        - movieId
+      type: object
+      properties:
+        date:
+          $ref: '#/components/schemas/Date'
+        movieId:
+          $ref: '#/components/schemas/MovieId'
+
+    AvailableBooking:
+      required:
+        - date
+        - availableMovies
+      type: object
+      properties:
+        date:
+          $ref: '#/components/schemas/Date'
+        availableMovies:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieId'
+    MovieInfo:
+      required:
+        - movies
+      type: object
+      properties:
+        movies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+
+    User:
+      required:
+        - id
+        - name
+        - last_active
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        name:
+          $ref: '#/components/schemas/Username'
+        last_active:
+          $ref: '#/components/schemas/Date'
+        
+    Date:
+      type: string
+      example: "1360031010"
+    
+    UserId:
+      type: string
+      example: chris_rivers
+
+    Username:
+      type: string
+      example: Chris Rivers
+    
+    MovieId:
+      type: string
+      example: 276c79ec-a26a-40a6-b3d3-fb242a5947b6
