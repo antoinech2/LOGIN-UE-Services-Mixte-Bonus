@@ -7,15 +7,20 @@ from werkzeug.exceptions import NotFound
 # CALLING gRPC requests
 import grpc
 from concurrent import futures
-#import booking_pb2
-#import booking_pb2_grpc
-#import movie_pb2
-#import movie_pb2_grpc
+import booking_pb2
+import booking_pb2_grpc
+import showtime_pb2
+import showtime_pb2_grpc
 
-# CALLING GraphQL requests
-# todo to complete
 
 app = Flask(__name__)
+# Configurer les canaux gRPC vers les services Booking et Showtime
+booking_channel = grpc.insecure_channel('localhost:3003')
+booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
+
+showtime_channel = grpc.insecure_channel('localhost:3002')
+showtime_stub = showtime_pb2_grpc.ShowtimeStub(showtime_channel)
+
 
 PORT = 3004
 HOST = '0.0.0.0'
@@ -82,6 +87,72 @@ def get_movie_info():
     }
 
     return make_response(jsonify(result), 200)
+
+# Display movies that are available for booking on a specific date
+@app.route("/available_bookings", methods=['GET'])
+def get_available_bookings():
+   # check if there is a date in the request
+   if not "date" in request.args or not request.args["date"]:
+      return make_response(jsonify({"error":"No date provided"}), 400)
+
+   date = request.args["date"]
+
+   # ask showtimes service a list of movies for the date
+   date_request = showtime_pb2.Date(date=date)
+   try:
+      response = showtime_stub.GetMovieByDate(date_request)
+      movies_id = response.movies
+   except grpc.RpcError as e:
+      print(e)
+      if e.code() == grpc.StatusCode.NOT_FOUND:
+         return make_response(jsonify({"error": "No showtimes available for this date"}), 404)
+      return make_response(jsonify({"error": "Error in showtimes service"}), 500)
+
+   # get the name of the movies
+   movies_name = []
+   for movie in movies_id:
+      movie_name = requests.get(f"http://127.0.0.1:3200/movies/{movie}/title")
+      if not movie_name.ok:
+         return make_response(jsonify({"error":"Error in movies service or unknown movie"}), 500)
+      movies_name.append(movie_name.text)
+
+   return make_response(jsonify(movies_name), 200)
+
+# Add a booking for a movie
+@app.route("/create_booking/<userid>", methods=['POST'])
+def create_booking_by_userid(userid):
+   req = request.get_json()
+   date = req.get("date")
+   movie = req.get("movieid")
+
+   # Préparation de la requête gRPC pour ajouter une réservation
+   booking_request = booking_pb2.AddBookingRequest(user=userid, date=date, movie=movie)
+
+   try:
+      response = booking_stub.AddBookingForUser(booking_request)
+      print(response.movieId)
+      return make_response(jsonify({"date": response.date, "movieId": list(response.movieId)}), 200)
+   except grpc.RpcError as e:
+      print(e)
+      if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+         return make_response(jsonify({"error": "Missing date or movie ID"}), 400)
+      elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
+         return make_response(jsonify({"error": "Booking already exists for this user"}), 409)
+      return make_response(jsonify({"error": "Error in booking service"}), 500)
+
+# Get bookings of a user
+@app.route("/bookings/<userid>", methods=['GET'])
+def get_bookings_by_userid(userid):
+   user_request = booking_pb2.User(id=userid)
+
+   try:
+      response = booking_stub.GetBookingsByUser(user_request)
+      bookings = [{"userid": userid, "date": booking.date, "movieId": list(booking.movieId)} for booking in response.booking]
+      return make_response(jsonify(bookings), 200)
+   except grpc.RpcError as e:
+      if e.code() == grpc.StatusCode.NOT_FOUND:
+         return make_response(jsonify({"error": "Invalid user ID"}), 404)
+      return make_response(jsonify({"error": "Error in service booking"}), 500)
 
 
 if __name__ == "__main__":

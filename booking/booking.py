@@ -34,10 +34,9 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
                         movieId=booking["movies"]
                     ) for booking in booking["dates"]
                 ])
-        else:
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details(f"No booking found for user: {request.id}")
-            return booking_pb2.BookingList()
+        context.set_code(grpc.StatusCode.NOT_FOUND)
+        context.set_details(f"No booking found for user: {request.id}")
+        return booking_pb2.BookingList()
         
     def AddBookingForUser(self, request, context):
         user_id = request.user
@@ -108,8 +107,9 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     booking_pb2_grpc.add_BookingServicer_to_server(BookingServicer(), server)
-    server.add_insecure_port('[::]:3002')
+    server.add_insecure_port('[::]:3003')
     server.start()
+    print("Server running in port 3003")
     server.wait_for_termination()
 
 def write(bookings):
