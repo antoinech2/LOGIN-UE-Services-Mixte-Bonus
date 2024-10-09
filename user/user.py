@@ -28,6 +28,11 @@ HOST = '0.0.0.0'
 with open('{}/data/users.json'.format("."), "r") as jsf:
    users = json.load(jsf)["users"]
 
+def getUser(userid):
+   for user in users:
+      if user["id"] == userid:
+         return user
+   return None
 
 @app.route("/", methods=['GET'])
 def home():
@@ -39,9 +44,9 @@ def get_users():
 
 @app.route("/users/<userid>", methods=['GET'])
 def get_user_by_userid(userid):
-   for user in users:
-      if user["id"] == userid:
-         return make_response(jsonify(user), 200)
+   user = getUser(userid)
+   if user:
+      return make_response(jsonify(user), 200)
    return make_response(jsonify({"error":"User not found"}), 404)
 
 @app.route("/movie_info", methods=['GET'])
@@ -78,7 +83,6 @@ def get_movie_info():
     # We provide info to end-users (not the interal movie id)
     response_json = response.json()
     movie = response_json["data"]["movie_with_title"]
-    print(movie)
     result = {
         "title": movie["title"],
         "director": movie["director"],
@@ -103,7 +107,6 @@ def get_available_bookings():
       response = showtime_stub.GetMovieByDate(date_request)
       movies_id = response.movies
    except grpc.RpcError as e:
-      print(e)
       if e.code() == grpc.StatusCode.NOT_FOUND:
          return make_response(jsonify({"error": "No showtimes available for this date"}), 404)
       return make_response(jsonify({"error": "Error in showtimes service"}), 500)
@@ -119,21 +122,22 @@ def get_available_bookings():
    return make_response(jsonify(movies_name), 200)
 
 # Add a booking for a movie
-@app.route("/create_booking/<userid>", methods=['POST'])
+@app.route("/bookings/<userid>", methods=['POST'])
 def create_booking_by_userid(userid):
    req = request.get_json()
    date = req.get("date")
    movie = req.get("movieid")
+   
+   if not getUser(userid):
+      return make_response(jsonify({"error":"User not found"}), 404)
 
    # Préparation de la requête gRPC pour ajouter une réservation
    booking_request = booking_pb2.AddBookingRequest(user=userid, date=date, movie=movie)
 
    try:
       response = booking_stub.AddBookingForUser(booking_request)
-      print(response.movieId)
       return make_response(jsonify({"date": response.date, "movieId": list(response.movieId)}), 200)
    except grpc.RpcError as e:
-      print(e)
       if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
          return make_response(jsonify({"error": "Missing date or movie ID"}), 400)
       elif e.code() == grpc.StatusCode.ALREADY_EXISTS:
