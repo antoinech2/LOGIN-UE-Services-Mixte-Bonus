@@ -13,6 +13,16 @@ message BookingDatabase {
     repeated BookingList bookingList = 1;
 }
 
+message BookingList {
+    string userid = 1;
+    repeated BookingData booking = 2;
+}
+
+message BookingData {
+    string date = 1;
+    repeated string movieId = 2;
+}
+
 message User {
     string id = 1;
 }
@@ -25,18 +35,8 @@ message Date {
     string date = 1;
 }
 
-message BookingList {
-    string userId = 1;
-    repeated BookingData booking = 2;
-}
-
-message BookingData {
-    float date = 1;
-    repeated string movieId = 2;
-}
-
 message AddBookingRequest {
-    User user = 1;
-    Date date = 2;
-    Movie movie = 3;
+    string user = 1;
+    string date = 2;
+    string movie = 3;
 }
