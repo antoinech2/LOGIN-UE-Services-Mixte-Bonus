@@ -1,5 +1,5 @@
 from ariadne import graphql_sync, make_executable_schema, load_schema_from_path, ObjectType, QueryType, MutationType
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 
 import resolvers as r
 
@@ -11,6 +11,7 @@ type_defs = load_schema_from_path('movie.graphql')
 query = QueryType()
 movie = ObjectType('Movie')
 query.set_field('movie_with_id', r.movie_with_id)
+query.set_field('movie_with_title', r.movie_with_title)
 
 mutation = MutationType()
 mutation.set_field('update_movie_rate', r.update_movie_rate)
@@ -29,6 +30,7 @@ def home():
 @app.route('/graphql', methods=['POST'])
 def graphql_server():
     data = request.get_json()
+    print(data)
     success, result = graphql_sync(
                         schema,
                         data,
