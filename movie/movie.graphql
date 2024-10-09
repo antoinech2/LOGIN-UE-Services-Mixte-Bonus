@@ -1,5 +1,6 @@
 type Query {
     movie_with_id(_id: String!): Movie
+    movie_with_title(_title: String!): Movie
 }
 
 type Mutation {
