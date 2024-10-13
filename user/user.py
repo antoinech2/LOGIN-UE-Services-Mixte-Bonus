@@ -74,16 +74,15 @@ def get_movie_info():
     """%(title)
     
     
-    response = requests.post(url, json={'query': graphql_query}, headers=headers)
-    # check if there is an error using the response code
-    if not response.ok:
-        if response.status_code == 404:
-            return make_response(jsonify({"error":"No movie found"}), 404)
+    graphql_data = requests.post(url, json={'query': graphql_query}, headers=headers)
+    
+    if graphql_data.status_code != 200:
         return make_response(jsonify({"error":"Error in movie service"}), 500)
-   
+    movie = graphql_data.json()["data"]["movie_with_title"]
+    if not movie:
+        return make_response(jsonify({"error":"No movie found"}), 404)
+    
     # We provide info to end-users (not the interal movie id)
-    response_json = response.json()
-    movie = response_json["data"]["movie_with_title"]
     result = {
         "title": movie["title"],
         "director": movie["director"],
