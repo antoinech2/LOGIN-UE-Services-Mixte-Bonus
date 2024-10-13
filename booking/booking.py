@@ -6,6 +6,9 @@ import booking_pb2
 import booking_pb2_grpc
 import json
 
+import showtime_pb2
+import showtime_pb2_grpc
+
 class BookingServicer(booking_pb2_grpc.BookingServicer):
 
     def __init__(self):
@@ -47,7 +50,7 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details("Missing date or movie ID.")
             return booking_pb2.BookingData()
-
+                
         # Check if user already has this booking
         for booking in self.db:
             if booking["userid"] == user_id:
@@ -58,21 +61,17 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
                         return booking_pb2.BookingData()
 
         # Ask showtimes service for a list of movies for the date
-        service_request = requests.get(f"http://127.0.0.1:3202/showtimes/{req_date}")
+        #service_request = requests.get(f"http://127.0.0.1:3202/showtimes/{req_date}")
+        with grpc.insecure_channel('localhost:3002') as channel:
+            stub = showtime_pb2_grpc.ShowtimeStub(channel)
+            movies = stub.GetMovieByDate(showtime_pb2.Date(date=req_date))
+            movies_list = list(movies.movies)
+            print(movies_list)
+        channel.close()
 
-        if not service_request.ok:
-            if service_request.status_code == 404:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details("No showtimes available for this date.")
-            else:
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details("Error in showtimes service.")
-            return booking_pb2.BookingData()
 
-        service_data = service_request.json()
-        movies = service_data.get("movies", [])
 
-        if movie_id not in movies:
+        if movie_id not in movies_list:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("Movie not available for the selected date.")
             return booking_pb2.BookingData()

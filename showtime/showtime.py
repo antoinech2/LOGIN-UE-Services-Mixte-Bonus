@@ -25,11 +25,9 @@ class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
         return showtimes_data
     
     def GetMovieByDate(self, request, context):
-        print("GetMovieByDate")
         date = request.date
         # Filter for the requested date
         movie = next((showtime for showtime in self.db if showtime["date"] == date), None)
-        
         if movie:
             return showtime_pb2.ShowtimeData(
                 date=movie["date"],
