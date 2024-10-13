@@ -64,14 +64,15 @@ def get_movie_info():
 
     graphql_query = """
     query Movie_with_title {
-        movie_with_title(_title: "The Good Dinosaur") {
+        movie_with_title(_title: "%s") {
             id
             title
             director
             rating
         }
     }
-    """
+    """%(title)
+    
     
     response = requests.post(url, json={'query': graphql_query}, headers=headers)
     # check if there is an error using the response code
