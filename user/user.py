@@ -113,11 +113,23 @@ def get_available_bookings():
 
    # get the name of the movies
    movies_name = []
-   for movie in movies_id:
-      movie_name = requests.get(f"http://127.0.0.1:3200/movies/{movie}/title")
-      if not movie_name.ok:
-         return make_response(jsonify({"error":"Error in movies service or unknown movie"}), 500)
-      movies_name.append(movie_name.text)
+   for movie_id in movies_id:
+      url = 'http://127.0.0.1:3001/graphql'
+      headers = {
+        'Content-Type': 'application/json',
+      }
+      graphql_query = """
+      query Movie_with_id {
+        movie_with_id(_id: "%s") {
+            title
+        }
+      }
+      """%(movie_id)
+      graphql_data = requests.post(url, json={'query': graphql_query}, headers=headers)
+      if graphql_data.status_code != 200:
+         return make_response(jsonify({"error":"Error in movie service"}), 500)
+      movie_name = graphql_data.json()["data"]["movie_with_id"]["title"]
+      movies_name.append(movie_name)
 
    return make_response(jsonify(movies_name), 200)
 
