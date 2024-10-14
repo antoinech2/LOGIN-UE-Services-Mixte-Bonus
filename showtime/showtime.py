@@ -23,6 +23,14 @@ class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
             ]
         )
         return showtimes_data
+
+    def GetDates(self, request, context):
+        showtimes_data = showtime_pb2.DatesData(
+            dates=[
+                showtime["date"] for showtime in self.db
+            ]
+        )
+        return showtimes_data
     
     def GetMovieByDate(self, request, context):
         date = request.date

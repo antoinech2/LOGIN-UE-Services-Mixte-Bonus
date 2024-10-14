@@ -4,12 +4,17 @@ package showtime;
 
 service Showtime {
     rpc Showtimes(Empty) returns (ShowtimesData) {}
+    rpc GetDates(Empty) returns (DatesData) {}
     rpc GetMovieByDate(Date) returns (ShowtimeData) {}
 }
 
 message ShowtimeData {
     string date = 1;
     repeated string movies = 2;
+}
+
+message DatesData {
+    repeated string dates = 1;
 }
 
 message ShowtimesData {

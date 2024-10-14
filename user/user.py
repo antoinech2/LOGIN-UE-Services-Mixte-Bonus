@@ -99,6 +99,16 @@ def get_movie_info():
 
     return make_response(jsonify(result), 200)
 
+@app.route("/available_dates", methods=['GET'])
+def get_available_dates():
+   # ask showtimes service for available dates
+   try:
+      response = showtime_stub.GetDates(showtime_pb2.Empty())
+      dates = response.dates
+      return make_response(jsonify(list(dates)), 200)
+   except grpc.RpcError as e:
+      return make_response(jsonify({"error": "Error in showtimes service"}), 500)
+
 # Display movies that are available for booking on a specific date
 @app.route("/available_bookings", methods=['GET'])
 def get_available_bookings():
