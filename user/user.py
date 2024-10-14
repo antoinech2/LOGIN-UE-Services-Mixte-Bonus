@@ -4,6 +4,7 @@ import tkinter as tk
 
 # REST API
 from flask import Flask, render_template, request, jsonify, make_response
+from flask_cors import CORS, cross_origin
 import requests
 import json
 from werkzeug.exceptions import NotFound
@@ -18,6 +19,8 @@ import showtime_pb2_grpc
 
 
 app = Flask(__name__)
+CORS(app)
+
 # Configurer les canaux gRPC vers les services Booking et Showtime
 booking_channel = grpc.insecure_channel('localhost:3003')
 booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
