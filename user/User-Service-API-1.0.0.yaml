@@ -4,7 +4,7 @@ info:
   description: API documentation for the User Service.
   contact:
     name: Jean-Baptiste Lambertin
-    email: jean-baptiste.lambertin@imt-atlantique.fr
+    email: jean-baptiste.lambertin@imt-atlantique.net
   version: 1.0.0
 tags:
   - name: Admin
@@ -74,11 +74,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"User not found"}
+                    example: User not found
 
-  /create_booking/{userId}:
+  /bookings/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get User Bookings
+      description: Retrieves the booking details for a specific user by user ID.
+      operationId: get_bookings_by_userid
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserId'
+      responses:
+        "200":
+          description: List of bookings for the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBookings'
+        "404":
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid user ID
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
     post:
       tags:
         - User
@@ -112,9 +152,29 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"No date provided"}
+                    example: Missing date or movie ID
+        "404":
+          description: User does not exist.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        "409":
+          description: Movie already booked for this user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Booking already exists for this user
         "500":
           description: Internal server error.
           content:
@@ -122,72 +182,31 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"Internal server error"}
-                
-  /bookings/{userId}:
-    get:
-      tags:
-        - User
-      summary: Get User Bookings
-      description: Retrieves the booking details for a specific user by user ID.
-      operationId: get_bookings_by_userid
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          description: The ID of the user.
-          schema:
-            $ref: '#/components/schemas/UserId'
-      responses:
-        "200":
-          description: List of bookings for the user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserBookings'
-        "400":
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: {"error":"Bad request"}
-        "500":
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: {"error":"Internal server error"}
+                    example: Internal server error
                 
   /available_bookings:
-    post:
+    get:
       tags:
         - User
       summary: Get Available Bookings for a Date
       description: Retrieves available booking options for a user on a specified date.
       operationId: get_available_bookings()
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Date'
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: The date to lookup availability.
+          schema:
+            $ref: '#/components/schemas/Date'
       responses:
         "200":
-          description: List of available bookings for the user on the given date.
+          description: List of movies on the given date.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AvailableBooking'
+                $ref: '#/components/schemas/MovieList'
         "400":
           description: Invalid request.
           content:
@@ -195,9 +214,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"No date provided"}
+                    example: No date provided
         "404":
           description: No available bookings found.
           content:
@@ -205,9 +224,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"No available bookings found"}
+                    example: No showtimes available for this date
         "500":
           description: Internal server error.
           content:
@@ -215,17 +234,24 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"Internal server error"}
+                    example: Internal server error
                 
   /movie_info:
     get:
       tags:
         - User
       summary: Get Movie Information
-      description: Retrieves information about all movies (excluding movie IDs).
+      description: Retrieves information about a specific movie (by its title).
       operationId: get_movie_info
+      parameters:
+        - name: title
+          in: query
+          required: true
+          description: The title of the movie.
+          schema:
+            $ref: '#/components/schemas/MovieTitle'    
       responses:
         "200":
           description: List of movie information.
@@ -234,15 +260,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/MovieInfo'
         "400":
-          description: Invalid request.
+          description: No title provided.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"No title provided"}
+                    example: No title provided
         "404":
           description: No movie found.
           content:
@@ -250,9 +276,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"No movie found"}
+                    example: No movie found
         "500":
           description: Internal server error.
           content:
@@ -260,47 +286,42 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  error:
                     type: string
-                    example: {"error":"Internal server error"}
+                    example: Internal server error
 
 components:
   schemas:
     UserBookings:
-      required:
-        - userId
-        - bookings
-      type: object
-      properties:
-        userId:
-          $ref: '#/components/schemas/UserId'
-        bookings:
-          type: array
-          items:
-            $ref: '#/components/schemas/BookingDetails'
+      type: array
+      items:
+        $ref: '#/components/schemas/BookingDetails'
             
     BookingDetails:
       required:
         - date
-        - movies
-      type: object
-      properties:
-        date:
-          $ref: '#/components/schemas/Date'
-        movies:
-          type: array
-          items:
-            $ref: '#/components/schemas/MovieId'
-            
-    Booking:
-      required:
-        - date
         - movieId
+        - userid
       type: object
       properties:
         date:
           $ref: '#/components/schemas/Date'
         movieId:
+          type: array
+          items:
+            $ref: '#/components/schemas/MovieId'
+        userid:
+          $ref: '#/components/schemas/UserId'
+            
+    Booking:
+      required:
+        - date
+        - movieid
+      type: object
+      properties:
+        date:
+          $ref: '#/components/schemas/Date'
+        movieid:
           $ref: '#/components/schemas/MovieId'
 
     AvailableBooking:
@@ -317,13 +338,27 @@ components:
             $ref: '#/components/schemas/MovieId'
     MovieInfo:
       required:
-        - movies
+        - director
+        - id
+        - title
+        - rating
       type: object
       properties:
-        movies:
-          type: array
-          items:
-            $ref: '#/components/schemas/Booking'
+        director:
+          type: string
+          example: Tom Hooper
+        id:
+          $ref: '#/components/schemas/MovieId'
+        title:
+          $ref: '#/components/schemas/MovieTitle'
+        rating:
+          type: number
+          example: 7.6
+
+    MovieList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MovieTitle'
 
     User:
       required:
@@ -354,3 +389,7 @@ components:
     MovieId:
       type: string
       example: 276c79ec-a26a-40a6-b3d3-fb242a5947b6
+
+    MovieTitle:
+      type: string
+      example: The Good Dinosaur

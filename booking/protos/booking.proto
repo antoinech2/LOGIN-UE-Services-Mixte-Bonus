@@ -3,25 +3,36 @@ syntax = "proto3";
 package booking;
 
 service Booking {
+    // Returns all the bookings in the database, for every user
     rpc GetAllBookings(Empty) returns (BookingDatabase) {}
+
+    // Returns all the bookings for a specific user
     rpc GetBookingsByUser(User) returns (BookingList) {}
+
+    // Create a new booking for a user and return the booking data
     rpc AddBookingForUser(AddBookingRequest) returns (BookingData) {}
 }
 
 message Empty {
 }
 
+// Represents the database of bookings
+// A list of booking list for each user
 message BookingDatabase {
     repeated BookingList bookingList = 1;
 }
 
+// A list of booking for a specific user
 message BookingList {
     string userid = 1;
     repeated BookingData booking = 2;
 }
 
+// Represents a booking data on a specific date
 message BookingData {
     string date = 1;
+
+    // List of movie ids that the user has booked
     repeated string movieId = 2;
 }
 
@@ -29,16 +40,14 @@ message User {
     string id = 1;
 }
 
-message Movie {
-    string id = 1;
-}
-
-message Date {
-    string date = 1;
-}
-
+// Request parameters to create a new booking
 message AddBookingRequest {
+    // User id
     string user = 1;
+
+    // Booking date
     string date = 2;
+
+    // Movie id
     string movie = 3;
 }

@@ -1,20 +1,29 @@
+
+# Queries access
 type Query {
+    # Get movie details giving the movie id
     movie_with_id(_id: String!): Movie
+
+    # Get movie details giving the movie name
     movie_with_title(_title: String!): Movie
 }
 
 type Mutation {
+    # Update the rating of a movie
     update_movie_rate(_id: String!, _rate: Float!): Movie
 }
 
+# Type of a movie
 type Movie {
     id: String!
     title: String!
     director: String!
     rating: Float!
-    actors: [Actor]
+    actors: [Actor] # Not implemented
 }
 
+# Type of the actor of a movie
+# Warning : not implemented
 type Actor {
     id: String!
     firstname: String!

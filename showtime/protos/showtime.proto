@@ -3,19 +3,26 @@ syntax = "proto3";
 package showtime;
 
 service Showtime {
+    // Returns all the database of show times of movies
     rpc Showtimes(Empty) returns (ShowtimesData) {}
+    // Get the movies that are showing on a specific date
     rpc GetMovieByDate(Date) returns (ShowtimeData) {}
 }
 
-message ShowtimeData {
-    string date = 1;
-    repeated string movies = 2;
-}
-
+// Represents a list of movie showtimes
 message ShowtimesData {
     repeated ShowtimeData showtimes = 1; 
 }
 
+// Represents a movie showtime
+message ShowtimeData {
+    // The date of the showtime
+    string date = 1;
+    // The movies names that are showing on that date
+    repeated string movies = 2;
+}
+
+// Reprensents a date
 message Date{
     string date = 1;
 }
