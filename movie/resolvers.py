@@ -1,38 +1,36 @@
-import json
-import os
+from sqlalchemy import inspect
+from database.models import db, Movie, Actor
+from flask import current_app
 
-dirname = os.path.dirname(__file__)
+def object_as_dict(obj):
+    return {
+        c.key: getattr(obj, c.key)
+        for c in inspect(obj).mapper.column_attrs
+    }
 
 def movie_with_id(_,info,_id):
-    with open('{}/data/movies.json'.format(dirname), "r") as file:
-        movies = json.load(file)
-        for movie in movies['movies']:
-            if movie['id'] == _id:
-                return movie
+    with current_app.app_context():
+        movie = db.session.query(Movie).filter_by(id=_id).first()
+        return object_as_dict(movie)
 
 def movie_with_title(_,info,_title):
-    with open('{}/data/movies.json'.format(dirname), "r") as file:
-        movies = json.load(file)
-        for movie in movies['movies']:
-            if movie['title'] == _title:
-                return movie
+    with current_app.app_context():
+        movie = db.session.query(Movie).filter_by(title=_title).first()
+        return object_as_dict(movie)
 
 def update_movie_rate(_,info,_id,_rate):
-    newmovies = {}
-    newmovie = {}
-    with open('{}/data/movies.json'.format(dirname), "r") as rfile:
-        movies = json.load(rfile)
-        for movie in movies['movies']:
-            if movie['id'] == _id:
-                movie['rating'] = _rate
-                newmovie = movie
-                newmovies = movies
-    with open('{}/data/movies.json'.format(dirname), "w") as wfile:
-        json.dump(newmovies, wfile)
-    return newmovie
+    with current_app.app_context():
+        movie = db.session.query(Movie).filter_by(id=_id).first()
+        movie.rating = _rate
+        db.session.commit()
+        return object_as_dict(movie)
 
 def resolve_actors_in_movie(movie, info):
-    with open('{}/data/actors.json'.format(dirname), "r") as file:
-        actors = json.load(file)
-        result = [actor for actor in actors['actors'] if movie['id'] in actor['films']]
-        return result
+    with current_app.app_context():
+        actors = db.session.query(Actor).filter(Actor.films.any(id=movie['id'])).all()
+        actors_list = []
+        for actor in actors:
+            actor_dict = object_as_dict(actor)
+            actor_dict['films'] = [object_as_dict(film)["id"] for film in actor.films]
+            actors_list.append(actor_dict)
+        return actors_list

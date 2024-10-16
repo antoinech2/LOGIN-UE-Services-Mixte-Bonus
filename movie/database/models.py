@@ -15,9 +15,15 @@ class Actor(db.Model):
     birthyear = db.Column(db.Integer, nullable=False)
     films = db.relationship('Movie', secondary = actor_film_association)
 
+    def __repr__(self):
+        return f'<Actor {self.firstname} {self.lastname}>'
+
 class Movie(db.Model):
     __tablename__ = 'movies'
     id = db.Column(db.String(36), primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     rating = db.Column(db.Float, nullable=False)
     director = db.Column(db.String(100), nullable=False)
+    
+    def __repr__(self):
+        return f'<Movie {self.title}>'

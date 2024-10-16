@@ -1,5 +1,6 @@
 from ariadne import graphql_sync, make_executable_schema, load_schema_from_path, ObjectType, QueryType, MutationType
 from flask import Flask, request, jsonify, make_response
+from database.models import db
 import os
 
 import resolvers as r
@@ -7,10 +8,12 @@ import resolvers as r
 PORT = 3001
 HOST = '0.0.0.0'
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'database/database.db')
+app.config['SQALCHEMY_TRACK_MODIFICATIONS'] = False
 
-dirname = os.path.dirname(__file__)
+db.init_app(app)
 
-type_defs = load_schema_from_path(f'{dirname}/movie.graphql')
+type_defs = load_schema_from_path(os.path.join(os.path.dirname(__file__), 'movie.graphql'))
 query = QueryType()
 movie = ObjectType('Movie')
 query.set_field('movie_with_id', r.movie_with_id)
@@ -33,7 +36,6 @@ def home():
 @app.route('/graphql', methods=['POST'])
 def graphql_server():
     data = request.get_json()
-    print(data)
     success, result = graphql_sync(
                         schema,
                         data,
