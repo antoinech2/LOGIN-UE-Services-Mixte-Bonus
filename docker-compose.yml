@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  movie:
+    build:
+      context: ./movie  # Path to the movie service folder
+    ports:
+      - "3001:3001"  # Expose the port the app runs on (adjust if necessary)
+
+  booking:
+    build:
+      context: ./booking  # Path to the booking service folder
+    ports:
+      - "3003:3003"  # Expose the port the app runs on (adjust if necessary)
+
+  showtime:
+    build:
+      context: ./showtime  # Path to the showtime service folder
+    ports:
+      - "3002:3002"  # Expose the port the app runs on (adjust if necessary)
+
+  user:
+    build:
+      context: ./user  # Path to the user service folder
+    ports:
+      - "3004:3004"  # Expose the port the app runs on (adjust if necessary)
+
+# Optionally add networks if needed
+networks:
+  default:
+    driver: bridge
