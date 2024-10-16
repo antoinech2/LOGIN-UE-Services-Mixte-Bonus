@@ -14,6 +14,10 @@ echo Microservice showtime demarre
 start /b python user\user.py
 echo Microservice user demarre
 
+cd /d rivol_imt
+start /b npm start
+echo Frontend demarre
+
 :: Attendre pour éviter que la fenêtre ne se ferme immédiatement
 echo Appuyez sur Ctrl+C pour arrêter tous les microservices.
 pause > nul
