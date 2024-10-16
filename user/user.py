@@ -56,36 +56,53 @@ def get_user_by_userid(userid):
 
 @app.route("/movie_info", methods=['GET'])
 def get_movie_info():
-    if not "title" in request.args or not request.args["title"]:
-       return make_response(jsonify({"error":"No title provided"}), 400)
-
-    title = request.args["title"]
-
-
     url = 'http://127.0.0.1:3001/graphql'
     headers = {
         'Content-Type': 'application/json',
     }
 
-    graphql_query = """
-    query Movie_with_title {
-        movie_with_title(_title: "%s") {
-            id
-            title
-            director
-            rating
-        }
-    }
-    """%(title)
+    if "title" in request.args and request.args["title"]:
+       title = request.args["title"]
+       graphql_query = """
+         query Movie_with_title {
+            movie_with_title(_title: "%s") {
+                  id
+                  title
+                  director
+                  rating
+            }
+         }
+         """%(title)
+       graphql_data = requests.post(url, json={'query': graphql_query}, headers=headers)
     
+       if graphql_data.status_code != 200:
+         return make_response(jsonify({"error":"Error in movie service"}), 500)
+       movie = graphql_data.json()["data"]["movie_with_title"]
+       if not movie:
+         return make_response(jsonify({"error":"No movie found"}), 404)
+       
+    elif "id" in request.args and request.args["id"]:
+         id = request.args["id"]
+         graphql_query = """
+            query Movie_with_id {
+               movie_with_id(_id: "%s") {
+                     id
+                     title
+                     director
+                     rating
+               }
+            }
+            """%(id)
+         graphql_data = requests.post(url, json={'query': graphql_query}, headers=headers)
+         if graphql_data.status_code != 200:
+            return make_response(jsonify({"error":"Error in movie service"}), 500)
+         movie = graphql_data.json()["data"]["movie_with_id"]
+         if not movie:
+            return make_response(jsonify({"error":"No movie found"}), 404)           
+    else:
+         return make_response(jsonify({"error":"No title or id provided"}), 400)    
     
-    graphql_data = requests.post(url, json={'query': graphql_query}, headers=headers)
-    
-    if graphql_data.status_code != 200:
-        return make_response(jsonify({"error":"Error in movie service"}), 500)
-    movie = graphql_data.json()["data"]["movie_with_title"]
-    if not movie:
-        return make_response(jsonify({"error":"No movie found"}), 404)
+   
     
     # We provide info to end-users (not the interal movie id)
     result = {
