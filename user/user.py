@@ -1,8 +1,3 @@
-#Tkinter
-import threading
-import tkinter as tk
-
-# REST API
 from flask import Flask, render_template, request, jsonify, make_response
 from flask_cors import CORS, cross_origin
 import requests
@@ -190,16 +185,7 @@ def get_bookings_by_userid(userid):
          return make_response(jsonify({"error": "Invalid user ID"}), 404)
       return make_response(jsonify({"error": "Error in service booking"}), 500)
 
-# start flask app
-def run_flask_app():
-    app.run(host=HOST, port=PORT)
 
-
-# Main code to run both Flask and Tkinter
 if __name__ == "__main__":
-    # start the Flask thread
-    flask_thread = threading.Thread(target=run_flask_app)
-    flask_thread.daemon = True
-    flask_thread.start()
-
-
+   print("Server running in port %s"%(PORT))
+   app.run(host=HOST, port=PORT)
