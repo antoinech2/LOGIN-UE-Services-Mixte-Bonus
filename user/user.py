@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, make_response
 import requests
 import json
 from werkzeug.exceptions import NotFound
+import os
 
 # CALLING gRPC requests
 import grpc
@@ -14,6 +15,9 @@ import showtime_pb2_grpc
 
 
 app = Flask(__name__)
+
+dirname = os.path.dirname(__file__)
+
 # Configurer les canaux gRPC vers les services Booking et Showtime
 booking_channel = grpc.insecure_channel('localhost:3003')
 booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
@@ -25,7 +29,7 @@ showtime_stub = showtime_pb2_grpc.ShowtimeStub(showtime_channel)
 PORT = 3004
 HOST = '0.0.0.0'
 
-with open('{}/data/users.json'.format("."), "r") as jsf:
+with open('{}/data/users.json'.format(dirname), "r") as jsf:
    users = json.load(jsf)["users"]
 
 def getUser(userid):

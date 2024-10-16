@@ -5,14 +5,17 @@ import requests
 import booking_pb2
 import booking_pb2_grpc
 import json
+import os
 
 import showtime_pb2
 import showtime_pb2_grpc
 
+dirname = os.path.dirname(__file__)
+
 class BookingServicer(booking_pb2_grpc.BookingServicer):
 
     def __init__(self):
-        with open('{}/data/bookings.json'.format("."), "r") as jsf:
+        with open('{}/data/bookings.json'.format(dirname), "r") as jsf:
             self.db = json.load(jsf)["bookings"]
             
     def GetAllBookings(self, request, context):

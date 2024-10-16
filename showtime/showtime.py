@@ -3,11 +3,15 @@ from concurrent import futures
 import showtime_pb2
 import showtime_pb2_grpc
 import json
+import os
+
+dirname = os.path.dirname(__file__)
+
 
 class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
 
     def __init__(self):
-        with open('{}/data/times.json'.format("."), "r") as jsf:
+        with open('{}/data/times.json'.format(dirname), "r") as jsf:
             self.db = json.load(jsf)["schedule"]
 
     # write the code for the rpc call
