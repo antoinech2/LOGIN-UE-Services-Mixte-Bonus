@@ -1,12 +1,12 @@
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { Container, Typography, Button, TextField, List, ListItem } from '@mui/material';
+import { Container, Typography, Button, TextField, List, ListItem, Drawer } from '@mui/material';
 import formatDate from '../helper/formatDate';
 import IconButton from '@mui/material/IconButton';
 import InfoIcon from '@mui/icons-material/Info';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
 
 import MovieDetails from '../components/MovieDetails';
 import DateList from '../components/DateList';
@@ -18,19 +18,49 @@ export default function Bookings() {
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [userId, setUserId] = useState('');    
     const [loggedIn, setLoggedIn] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false); 
+    const [userBookings, setUserBookings] = useState([]); 
 
     const handleLogin = () => {
         if (userId) {
-          setLoggedIn(true); // Simuler la connexion avec un ID utilisateur
+          setLoggedIn(true); // act like we're logged in
         }
       };
 
     useEffect(() => {
         setSelectedMovie(null);
-        axios.get(`http://localhost:3004/available_bookings?date=${selectedDate}`)
-            .then(response => setBookings(response.data))
-            .catch(error => console.error(error));
+        if (selectedDate) {
+          axios.get(`http://localhost:3004/available_bookings?date=${selectedDate}`)
+              .then(response => setBookings(response.data))
+              .catch(error => console.error(error));
+        }
     }, [selectedDate]);
+
+    useEffect(() => {
+      const fetchUserBookings = async () => {
+          try {
+              const response = await axios.get(`http://localhost:3004/bookings/${userId}`);
+              
+              // Utilisation de Promise.all pour gérer les requêtes asynchrones dans map
+              const bookingsWithMovieInfo = await Promise.all(
+                  response.data.map(async (booking) => {
+                      const movieResponse = await axios.get(`http://localhost:3004/movie_info?id=${booking.movieId}`);
+                      return {
+                          date: booking.date,
+                          movie: movieResponse.data // Assigne le nom ou les infos du film ici
+                      };
+                  })
+              );
+  
+              setUserBookings(bookingsWithMovieInfo); // Met à jour avec la liste enrichie
+          } catch (error) {
+              console.error(error);
+              setUserBookings([]); // Liste vide en cas d'erreur
+          }
+      };
+      fetchUserBookings();
+  }, [userId]);
+  
 
     return (
         <>
@@ -108,6 +138,46 @@ export default function Bookings() {
                 {selectedMovie && (
                   <MovieDetails name={selectedMovie} date={selectedDate} />
                 )}
+                
+                <IconButton
+                  edge="end"
+                  aria-label="menu"
+                  onClick={() => setMenuOpen(true)}
+                  style={{ position: 'absolute', right: 20, top: 20 }}
+                  size='large'
+                >
+                  <AccountBoxIcon /> 
+                </IconButton>
+
+                <Drawer
+                  anchor="right"
+                  open={menuOpen}
+                  onClose={() => setMenuOpen(false)}
+                >
+                  <div style={{ width: 250, padding: 0 }}>
+                    <Typography variant="h4" align='center' color='textPrimary'>
+                      Welcome {userId}
+                    </Typography>
+                    <Card>
+                      <Typography variant="h5" color='info' paddingLeft={1}>
+                        Your bookings
+                      </Typography>
+                      <List>
+                        {userBookings.length > 0 ? (
+                          userBookings.map((booking, index) => (
+                            <ListItem button key={index}>
+                              {formatDate(booking.date)} : {booking.movie.title}
+                            </ListItem>
+                          ))
+                        ) : (
+                          <Typography variant="body1" color="textSecondary" align="center">
+                            You have no booking yet
+                          </Typography>
+                        )}
+                      </List>
+                    </Card>
+                  </div>
+                </Drawer>
               </>
             )}
           </Container>
