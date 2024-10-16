@@ -1,5 +1,6 @@
 from ariadne import graphql_sync, make_executable_schema, load_schema_from_path, ObjectType, QueryType, MutationType
 from flask import Flask, request, jsonify, make_response
+import os
 
 import resolvers as r
 
@@ -7,7 +8,9 @@ PORT = 3001
 HOST = '0.0.0.0'
 app = Flask(__name__)
 
-type_defs = load_schema_from_path('movie.graphql')
+dirname = os.path.dirname(__file__)
+
+type_defs = load_schema_from_path(f'{dirname}/movie.graphql')
 query = QueryType()
 movie = ObjectType('Movie')
 query.set_field('movie_with_id', r.movie_with_id)
