@@ -115,7 +115,7 @@ def serve():
     server.wait_for_termination()
 
 def write(bookings):
-    with open('{}/data/bookings.json'.format("."), "w") as f:
+    with open('{}/data/bookings.json'.format(dirname), "w") as f:
         json.dump({"bookings": bookings}, f, indent=4)
 
 if __name__ == '__main__':
