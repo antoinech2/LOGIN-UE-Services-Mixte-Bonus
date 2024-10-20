@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, jsonify, make_response
 from flask_cors import CORS, cross_origin
 import requests
-import json
 from werkzeug.exceptions import NotFound
 import os
+from data.models import db, User
+from sqlalchemy import inspect
 
 # CALLING gRPC requests
 import grpc
@@ -29,15 +30,20 @@ showtime_stub = showtime_pb2_grpc.ShowtimeStub(showtime_channel)
 
 PORT = 3004
 HOST = '0.0.0.0'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'data/database.db')
+app.config['SQALCHEMY_TRACK_MODIFICATIONS'] = False
 
-with open('{}/data/users.json'.format(dirname), "r") as jsf:
-   users = json.load(jsf)["users"]
+db.init_app(app)
 
 def getUser(userid):
-   for user in users:
-      if user["id"] == userid:
-         return user
-   return None
+    user = db.session.query(User).filter(User.id == userid).first()
+    return object_as_dict(user)
+
+def object_as_dict(obj):
+    return {
+        c.key: getattr(obj, c.key)
+        for c in inspect(obj).mapper.column_attrs
+    }
 
 @app.route("/", methods=['GET'])
 def home():
@@ -45,7 +51,9 @@ def home():
 
 @app.route("/users", methods=['GET'])
 def get_users():
-   return make_response(jsonify(users), 200)
+    users = db.session.query(User).all()
+    users = [object_as_dict(user) for user in users]
+    return make_response(jsonify(users), 200)
 
 @app.route("/users/<userid>", methods=['GET'])
 def get_user_by_userid(userid):
