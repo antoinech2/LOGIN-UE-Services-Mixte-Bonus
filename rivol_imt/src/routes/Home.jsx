@@ -20,6 +20,15 @@ export default function Home() {
       >
         Go to Bookings
       </Button>
+      <Typography variant="body1" paragraph style={{ marginTop: '20px' }}>
+        If you are new to this site, please register to create an account.
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        component={Link}
+        to="/register"
+        style={{ marginTop: '20px' }}>Click here to register</Button>
     </Container>
   );
 }

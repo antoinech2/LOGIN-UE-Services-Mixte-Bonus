@@ -19,6 +19,7 @@ export default function Bookings() {
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [userId, setUserId] = useState('');    
     const [loggedIn, setLoggedIn] = useState(false);
+    const [userName, setUserName] = useState(null);
     const [menuOpen, setMenuOpen] = useState(false); 
     const [userBookings, setUserBookings] = useState([]); 
     const [userError, setUserError] = useState(null);
@@ -28,6 +29,7 @@ export default function Bookings() {
       axios.get(`http://localhost:3004/users/${userId}`)
         .then(response => {
           if (response.status === 200) {
+            setUserName(response.data.name);
             setLoggedIn(true);
             setUserError(false);
           }
@@ -41,8 +43,15 @@ export default function Bookings() {
           }
         });
     };
-    
 
+    const handleLogout = () => {
+      setLoggedIn(false);
+      setUserName(null);
+      setUserId('');
+      setMenuOpen(false);
+      setUserBookings([]);
+    };
+    
     useEffect(() => {
         setSelectedMovie(null);
         if (selectedDate) {
@@ -119,18 +128,19 @@ export default function Bookings() {
                         <Typography variant="body1" color="error">
                           User not found
                         </Typography>
-                        <Button
-                          variant="outlined"
-                          color="secondary"
-                          fullWidth
-                          component={Link}
-                          to="/register"
-                          sx={{ marginTop: 1 }}
-                        >
-                          New on this site? Create your account
-                        </Button>
                       </Box>
                     ) : null}
+
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      fullWidth
+                      component={Link}
+                      to="/register"
+                      sx={{ marginTop: 1 }}
+                    >
+                      New on this site? Create your account
+                    </Button>
 
                     <Button
                       variant="contained"
@@ -214,7 +224,7 @@ export default function Bookings() {
                 >
                   <div style={{ width: 250, padding: 0 }}>
                     <Typography variant="h4" align='center' color='textPrimary'>
-                      Welcome {userId}
+                      Welcome {userName}
                     </Typography>
                     <Card>
                       <Typography variant="h5" color='info' paddingLeft={1}>
@@ -235,6 +245,15 @@ export default function Bookings() {
                       </List>
                     </Card>
                   </div>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    fullWidth
+                    onClick={handleLogout}
+                    sx={{ marginTop: 2, padding: 2 }}
+                  >
+                    Logout
+                  </Button>
                 </Drawer>
               </>
             )}
