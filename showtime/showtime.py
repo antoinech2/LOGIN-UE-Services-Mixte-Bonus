@@ -2,53 +2,56 @@ import grpc
 from concurrent import futures
 import showtime_pb2
 import showtime_pb2_grpc
-import json
 import os
+from flask import Flask
+from database.models import db, Movie, Schedule
+from sqlalchemy.orm import joinedload
 
 dirname = os.path.dirname(__file__)
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'database/database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 
 class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
 
     def __init__(self):
-        with open('{}/data/times.json'.format(dirname), "r") as jsf:
-            self.db = json.load(jsf)["schedule"]
-
-    # write the code for the rpc call
+        with app.app_context():
+            self.schedules = Schedule.query.options(joinedload(Schedule.movies)).all()
 
     def Showtimes(self, request, context):
         print("Showtimes")
-        showtimes_data = showtime_pb2.ShowtimesData(
-            showtimes=[
-                showtime_pb2.ShowtimeData(
-                    date=showtime['date'],
-                    movies=showtime['movies']
-                ) for showtime in self.db
-            ]
-        )
-        return showtimes_data
+        with app.app_context():
+            showtimes_data = showtime_pb2.ShowtimesData(
+                showtimes=[
+                    showtime_pb2.ShowtimeData(
+                        date=schedule.date,
+                        movies=[movie.id for movie in schedule.movies] 
+                    ) for schedule in self.schedules
+                ]
+            )
+            return showtimes_data
 
     def GetDates(self, request, context):
-        showtimes_data = showtime_pb2.DatesData(
-            dates=[
-                showtime["date"] for showtime in self.db
-            ]
-        )
-        return showtimes_data
-    
+        print("GetDates")
+        dates = [schedule.date for schedule in self.schedules]
+        return showtime_pb2.DatesData(dates=dates)
+
     def GetMovieByDate(self, request, context):
+        print("GetMovieByDate")
         date = request.date
-        # Filter for the requested date
-        movie = next((showtime for showtime in self.db if showtime["date"] == date), None)
-        if movie:
-            return showtime_pb2.ShowtimeData(
-                date=movie["date"],
-                movies=movie["movies"]
-            )
-        else:
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details(f"No movies found for the date: {date}")
-            return showtime_pb2.ShowtimeData()
+        with app.app_context():
+            schedule = Schedule.query.filter_by(date=date).first()
+            if schedule:
+                return showtime_pb2.ShowtimeData(
+                    date=schedule.date,
+                    movies=[movie.id for movie in schedule.movies]
+                )
+            else:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details(f"No movies found for the date: {date}")
+                return showtime_pb2.ShowtimeData()
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
