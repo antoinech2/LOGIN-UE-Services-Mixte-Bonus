@@ -62,15 +62,6 @@ def get_user_by_userid(userid):
       return make_response(jsonify(user), 200)
    return make_response(jsonify({"error":"User not found"}), 404)
 
-#{
-#  "users": [
-#    {
-#      "id": "chris_rivers",
-#      "name": "Chris Rivers",
-#      "last_active":1360031010
-#    }]
-#}
-
 @app.route("/users", methods=['POST'])
 def create_user():
    req = request.get_json()
