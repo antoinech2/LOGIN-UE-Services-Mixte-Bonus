@@ -11,7 +11,7 @@ class Movie(db.Model):
     __tablename__ = 'movies'
     id = db.Column(db.String(36), primary_key=True)
     def __repr__(self):
-        return f'<Movie {self.title}>'
+        return f'<Movie {self.id}>'
 
 class Schedule(db.Model):
     __tablename__ = 'schedules'
