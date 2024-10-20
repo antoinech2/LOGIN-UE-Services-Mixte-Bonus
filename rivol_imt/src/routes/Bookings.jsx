@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { Container, Typography, Button, TextField, List, ListItem, Drawer } from '@mui/material';
+import { Container, Typography, Button, TextField, List, ListItem, Drawer, Box } from '@mui/material';
 import formatDate from '../helper/formatDate';
 import IconButton from '@mui/material/IconButton';
 import InfoIcon from '@mui/icons-material/Info';
@@ -10,6 +10,7 @@ import AccountBoxIcon from '@mui/icons-material/AccountBox';
 
 import MovieDetails from '../components/MovieDetails';
 import DateList from '../components/DateList';
+import { Link } from 'react-router-dom';
 
 export default function Bookings() {
 
@@ -82,25 +83,66 @@ export default function Bookings() {
           <Container>
             {!loggedIn ? (
               <>
-                <Typography variant="h4" gutterBottom>
-                  Login
-                </Typography>
-                <TextField
-                  label="Enter User ID"
-                  variant="outlined"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  fullWidth
-                />
-                {userError ? (<Typography variant="body1" color="error">User not found</Typography>) : null}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleLogin}
-                  style={{ marginTop: '20px' }}
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight="100vh"
+                  sx={{ backgroundColor: '#f0f0f0', padding: 4 }}
                 >
-                  Login
-                </Button>
+                  <Box
+                    sx={{
+                      boxShadow: 3,
+                      padding: 4,
+                      borderRadius: 2,
+                      backgroundColor: '#fff',
+                      maxWidth: '400px',
+                      width: '100%',
+                    }}
+                  >
+                    <Typography variant="h4" gutterBottom align="center">
+                      Login
+                    </Typography>
+
+                    <TextField
+                      label="Enter User ID"
+                      variant="outlined"
+                      value={userId}
+                      onChange={(e) => setUserId(e.target.value)}
+                      fullWidth
+                      margin="normal"
+                    />
+
+                    {userError ? (
+                      <Box mt={2} mb={2}>
+                        <Typography variant="body1" color="error">
+                          User not found
+                        </Typography>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          fullWidth
+                          component={Link}
+                          to="/register"
+                          sx={{ marginTop: 1 }}
+                        >
+                          New on this site? Create your account
+                        </Button>
+                      </Box>
+                    ) : null}
+
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={handleLogin}
+                      sx={{ marginTop: 3 }}
+                    >
+                      Login
+                    </Button>
+                  </Box>
+                </Box>
               </>
             ) : (
               <>
