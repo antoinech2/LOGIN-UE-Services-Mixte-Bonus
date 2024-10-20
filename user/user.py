@@ -30,7 +30,7 @@ showtime_stub = showtime_pb2_grpc.ShowtimeStub(showtime_channel)
 
 PORT = 3004
 HOST = '0.0.0.0'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'data/database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.dirname(__file__), 'database/database.db')
 app.config['SQALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
