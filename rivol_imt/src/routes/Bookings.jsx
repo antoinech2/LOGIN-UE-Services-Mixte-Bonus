@@ -20,12 +20,27 @@ export default function Bookings() {
     const [loggedIn, setLoggedIn] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false); 
     const [userBookings, setUserBookings] = useState([]); 
+    const [userError, setUserError] = useState(null);
 
     const handleLogin = () => {
-        if (userId) {
-          setLoggedIn(true); // act like we're logged in
-        }
-      };
+      // request the server on port 3004 to check if the user exists
+      axios.get(`http://localhost:3004/users/${userId}`)
+        .then(response => {
+          if (response.status === 200) {
+            setLoggedIn(true);
+            setUserError(false);
+          }
+        })
+        .catch(error => {
+          if (error.response && error.response.status === 404) {
+            // User not found
+            setUserError(true); // Set the error state
+          } else {
+            console.error(error);
+          }
+        });
+    };
+    
 
     useEffect(() => {
         setSelectedMovie(null);
@@ -77,6 +92,7 @@ export default function Bookings() {
                   onChange={(e) => setUserId(e.target.value)}
                   fullWidth
                 />
+                {userError ? (<Typography variant="body1" color="error">User not found</Typography>) : null}
                 <Button
                   variant="contained"
                   color="primary"
