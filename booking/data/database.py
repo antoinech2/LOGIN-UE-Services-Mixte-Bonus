@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import json
 from models import db, Movie, Date, Booking
 import os
