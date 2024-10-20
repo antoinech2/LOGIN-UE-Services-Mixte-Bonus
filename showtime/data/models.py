@@ -10,8 +10,13 @@ schedule_movies_association = db.Table('schedule_movies',
 class Movie(db.Model):
     __tablename__ = 'movies'
     id = db.Column(db.String(36), primary_key=True)
+    def __repr__(self):
+        return f'<Movie {self.title}>'
 
 class Schedule(db.Model):
     __tablename__ = 'schedules'
     date = db.Column(db.String(8), primary_key=True)
     movies = db.relationship('Movie', secondary = schedule_movies_association)
+    
+    def __repr__(self):
+        return f'<Schedule {self.date}>'
