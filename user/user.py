@@ -5,6 +5,7 @@ from werkzeug.exceptions import NotFound
 import os
 from database.models import db, User
 from sqlalchemy import inspect
+from time import time
 
 # CALLING gRPC requests
 import grpc
@@ -37,6 +38,8 @@ db.init_app(app)
 
 def getUser(userid):
     user = db.session.query(User).filter(User.id == userid).first()
+    if not user:
+        return None
     return object_as_dict(user)
 
 def object_as_dict(obj):
@@ -72,7 +75,7 @@ def create_user():
     username = req["name"]
     if getUser(userid):
         return make_response(jsonify({"error":"User already exists"}), 409)
-    user = User(id=userid, name=username)
+    user = User(id=userid, name=username, last_active=int(time()))
     db.session.add(user)
     db.session.commit()
     return make_response(jsonify({"id": userid, "name": username}), 201)
