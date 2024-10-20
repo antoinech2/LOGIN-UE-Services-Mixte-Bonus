@@ -62,19 +62,21 @@ def get_user_by_userid(userid):
       return make_response(jsonify(user), 200)
    return make_response(jsonify({"error":"User not found"}), 404)
 
+
 @app.route("/users", methods=['POST'])
 def create_user():
-   req = request.get_json()
-   if not req or not "id" in req or not "name" in req:
+    req = request.get_json()
+    if not req or not "id" in req or not "name" in req:
       return make_response(jsonify({"error":"Missing id or name"}), 400)
-   userid = req["id"]
-   username = req["name"]
-   if getUser(userid):
-      return make_response(jsonify({"error":"User already exists"}), 409)
-   users.append({"id": userid, "name": username, "last_active": 0})
-   with open('{}/data/users.json'.format(dirname), "w") as jsf:
-      json.dump({"users": users}, jsf , indent=4)
-   return make_response(jsonify({"id": userid, "name": username}), 201)
+    userid = req["id"]
+    username = req["name"]
+    if getUser(userid):
+        return make_response(jsonify({"error":"User already exists"}), 409)
+    user = User(id=userid, name=username)
+    db.session.add(user)
+    db.session.commit()
+    return make_response(jsonify({"id": userid, "name": username}), 201)
+
 
 @app.route("/movie_info", methods=['GET'])
 def get_movie_info():
