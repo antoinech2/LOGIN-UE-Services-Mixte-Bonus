@@ -3,7 +3,7 @@ from flask_cors import CORS, cross_origin
 import requests
 from werkzeug.exceptions import NotFound
 import os
-from data.models import db, User
+from database.models import db, User
 from sqlalchemy import inspect
 
 # CALLING gRPC requests
