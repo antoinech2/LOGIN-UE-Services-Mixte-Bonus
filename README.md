@@ -27,10 +27,10 @@ All APIs documentation can be found in OpenAPI YAML file in the root of each ser
 
 - Install modules (in `requirements.txt`)
 
-### Automatic start (Windows)
+### Automatic start (Windows and Linux)
 
-To run all services automatically, simply run `run.bat` at the root of the project.
-Close the window to stop services
+To run all services automatically, simply run `run.bat` or `run.sh` at the root of the project.
+Close the terminal to stop services
 
 ### Manual start
 
