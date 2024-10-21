@@ -1,6 +1,6 @@
 # UE Services
 
-## TP API MIXTE (REST, GraphQL, gRPC)
+## TP API BONUS (REST, GraphQL, gRPC + Front interface)
 
 ### IMT Atlantique Nantes - TAF LOGIN*
 
@@ -16,6 +16,12 @@ This project is a simulation of a cinema management application (simplified). Th
 - **booking**, manages users' viewing reservations
 - **user**, provides an API that can be used by the service's customers.
 
+In addition to previous TP, we improved the application with :
+
+- New endpoints to interact with users and bookings
+- Data migrated to SQL databases
+- A front-end interface in React to use the service
+
 In this TP, all internal services use REST to communicate, whereas the `user` service provides a REST API for the end-user.
 All APIs documentation can be found in OpenAPI YAML file in the root of each service, or in GraphQL/gRPC schemas.
 
@@ -24,13 +30,15 @@ All APIs documentation can be found in OpenAPI YAML file in the root of each ser
 ### Requirements
 
 - Python 3
+- Node.js
 
-- Install modules (in `requirements.txt`)
+- Install python modules (in `requirements.txt`)
+- Install node modules (`npm install` in folder `/rivol_imt`)
 
-### Automatic start (Windows)
+### Automatic start (Windows and Linux)
 
-To run all services automatically, simply run `run.bat` at the root of the project.
-Close the window to stop services
+To run all services automatically, simply run `run.bat` or `run.sh` at the root of the project.
+Close the terminal to stop services
 
 ### Manual start
 
@@ -40,3 +48,8 @@ Run individually all services:
 - `python showtime/showtime.py`
 - `python booking/booking.py`
 - `python user/user.py`
+- `npm start` in folder `/rivol_imt` (for frontend)
+
+### Additional information
+
+Front-end development server runs on port 3010 and should be accessible on http://localhost:3010
