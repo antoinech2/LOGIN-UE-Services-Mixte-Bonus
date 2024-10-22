@@ -1,12 +1,10 @@
 import grpc
 from concurrent import futures
 
-import requests
 import booking_pb2
 import booking_pb2_grpc
 import os
-from database.models import db, Booking, Movie, Date, booking_movie_date_association
-from sqlalchemy.orm import joinedload
+from database.models import db, Booking
 from flask import Flask
 
 import showtime_pb2
@@ -23,7 +21,7 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
 
     def __init__(self):
         with app.app_context():
-            self.db = Booking.query.options(joinedload(Booking.movies).joinedload(Movie.dates)).all()
+            self.db = Booking.query.all()
             
     def GetAllBookings(self, request, context):
         print("GetAllBookings")
@@ -34,9 +32,9 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
                         userid=booking.user_id,
                         booking=[
                             booking_pb2.BookingData(
-                                date=date.date,
-                                movieId=[movie.id for movie in booking.movies if date in movie.dates]
-                            ) for date in booking.dates
+                                date=booking.date,
+                                movieId=[booking.movie_id]
+                            )
                         ]
                     ) for booking in self.db
                 ]
@@ -48,15 +46,15 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
         print("GetBookingsByUser")
         user_id = request.id
         with app.app_context():
-            booking = Booking.query.filter_by(user_id=user_id).first()
-            if booking:
+            bookings = Booking.query.filter_by(user_id=user_id).all()
+            if bookings:
                 return booking_pb2.BookingList(
-                    userid=booking.user_id,
+                    userid=user_id,
                     booking=[
                         booking_pb2.BookingData(
-                            date=date.date,
-                            movieId=[movie.id for movie in booking.movies if date in movie.dates]
-                        ) for date in booking.dates
+                            date=booking.date,
+                            movieId=[booking.movie_id]
+                        ) for booking in bookings
                     ]
                 )
             else:
@@ -76,8 +74,8 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
 
         with app.app_context():
             # Check if the user already has a booking for this movie and date
-            booking = Booking.query.filter_by(user_id=user_id).first()
-            if booking and any(d.date == req_date and movie_id in [m.id for m in booking.movies if d in m.dates] for d in booking.dates):
+            existing_booking = Booking.query.filter_by(user_id=user_id, date=req_date, movie_id=movie_id).first()
+            if existing_booking:
                 context.set_code(grpc.StatusCode.ALREADY_EXISTS)
                 context.set_details(f"Booking already exists for user {user_id}")
                 return booking_pb2.BookingData()
@@ -95,35 +93,9 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
                 context.set_details("Movie not available for the selected date.")
                 return booking_pb2.BookingData()
 
-            # Create a new booking entry if the user has no existing booking
-            if not booking:
-                booking = Booking(user_id=user_id)
-                db.session.add(booking)
-
-            # Check if the date already exists in the Date table, otherwise create it
-            date_entry = Date.query.filter_by(date=req_date).first()
-            if not date_entry:
-                date_entry = Date(date=req_date)
-                db.session.add(date_entry)
-
-            # Check if the movie already exists in the Movie table, otherwise create it
-            movie_entry = Movie.query.filter_by(id=movie_id).first()
-            if not movie_entry:
-                movie_entry = Movie(id=movie_id)
-                db.session.add(movie_entry)
-
-            # Add the movie and date to the user's booking
-            if movie_entry not in booking.movies:
-                booking.movies.append(movie_entry)
-
-            if date_entry not in booking.dates:
-                booking.dates.append(date_entry)
-
-            # Also ensure the association between the movie and the date
-            if date_entry not in movie_entry.dates:
-                movie_entry.dates.append(date_entry)
-
-            # Commit the changes to the database
+            # Create a new booking entry
+            new_booking = Booking(user_id=user_id, movie_id=movie_id, date=req_date)
+            db.session.add(new_booking)
             db.session.commit()
 
             # Return the booking details as a response
