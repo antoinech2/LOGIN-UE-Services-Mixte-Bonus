@@ -65,26 +65,39 @@ export default function Bookings() {
       const fetchUserBookings = async () => {
           try {
               const response = await axios.get(`http://localhost:3004/bookings/${userId}`);
-              
-              // Utilisation de Promise.all pour gérer les requêtes asynchrones dans map
+  
+              // Use Promise.all to fetch movie titles for each movieId
               const bookingsWithMovieInfo = await Promise.all(
-                  response.data.map(async (booking) => {
-                      const movieResponse = await axios.get(`http://localhost:3004/movie_info?id=${booking.movieId}`);
-                      return {
-                          date: booking.date,
-                          movie: movieResponse.data // Assigne le nom ou les infos du film ici
-                      };
+                  response.data.flatMap(async (booking) => {
+                      // Map through each movieId for a booking
+                      return await Promise.all(
+                          booking.movieId.map(async (id) => {
+                              const movieResponse = await axios.get(`http://localhost:3004/movie_info?id=${id}`);
+                              // Return an object in {date, title} format for each movieId
+                              return {
+                                  date: booking.date,
+                                  title: movieResponse.data.title // Extract the title
+                              };
+                          })
+                      );
                   })
               );
   
-              setUserBookings(bookingsWithMovieInfo); // Met à jour avec la liste enrichie
+              // Flatten the array and log the result
+              const flattenedBookings = bookingsWithMovieInfo.flat();
+              console.log("bookingsWithMovieInfo: ", flattenedBookings);
+  
+              // Update the state with enriched booking data in {date, title} format
+              setUserBookings(flattenedBookings);
           } catch (error) {
               console.error(error);
-              setUserBookings([]); // Liste vide en cas d'erreur
+              setUserBookings([]); // Set an empty list in case of error
           }
       };
+  
       fetchUserBookings();
   }, [userId]);
+  
   
 
     return (
@@ -234,7 +247,7 @@ export default function Bookings() {
                         {userBookings.length > 0 ? (
                           userBookings.map((booking, index) => (
                             <ListItem button key={index}>
-                              {formatDate(booking.date)} : {booking.movie.title}
+                              {formatDate(booking.date)} : {booking.title}
                             </ListItem>
                           ))
                         ) : (
