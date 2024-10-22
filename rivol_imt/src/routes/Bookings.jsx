@@ -96,7 +96,7 @@ export default function Bookings() {
       };
   
       fetchUserBookings();
-  }, [userId]);
+  }, [userId, menuOpen]);
   
   
 
