@@ -204,7 +204,7 @@ export default function Bookings() {
                   </Card>
                 )}
                 {selectedMovie && (
-                  <MovieDetails name={selectedMovie} date={selectedDate} />
+                  <MovieDetails name={selectedMovie} date={selectedDate} user={userId}/>
                 )}
                 
                 <IconButton

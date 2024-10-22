@@ -5,7 +5,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import { Typography, CardActions, Button } from '@mui/material';
 
-export default function MovieDetails({name, date}){
+export default function MovieDetails({name, date, user}){
     const [movie, setMovie] = useState([]);
     const [bookingResult, setBookingResult] = useState(null);
 
@@ -18,7 +18,7 @@ export default function MovieDetails({name, date}){
 
     const bookMovie = () => {
         if (!bookingResult){
-            axios.post('http://localhost:3004/bookings/peter_curley', {
+            axios.post(`http://localhost:3004/bookings/${user}`, {
                 date, movieid: movie.id
             })
             .then(response => {
