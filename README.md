@@ -35,6 +35,10 @@ All APIs documentation can be found in OpenAPI YAML file in the root of each ser
 - Install python modules (in `requirements.txt`)
 - Install node modules (`npm install` in folder `/rivol_imt`)
 
+### Project setup
+
+To setup the project (initialize database and install Node dependencies), run file `init.sh`
+
 ### Automatic start (Windows and Linux)
 
 To run all services automatically, simply run `run.bat` or `run.sh` at the root of the project.
