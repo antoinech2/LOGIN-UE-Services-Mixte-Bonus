@@ -74,7 +74,13 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
             context.set_details("Missing date or movie ID.")
             return booking_pb2.BookingData()
 
+        if not req_date or not movie_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Missing date or movie ID.")
+            return booking_pb2.BookingData()
+
         with app.app_context():
+            # Check if the user already has a booking for this date and movie
             # Check if the user already has a booking for this date and movie
             booking = Booking.query.filter_by(user_id=user_id).first()
             if booking and any(d.date == req_date and movie_id in [m.id for m in d.movies] for d in booking.dates):
@@ -92,6 +98,7 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
             # Check if the requested movie is available on the selected date
             if movie_id not in movies_list:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Movie not available for the selected date.")
                 context.set_details("Movie not available for the selected date.")
                 return booking_pb2.BookingData()
 
