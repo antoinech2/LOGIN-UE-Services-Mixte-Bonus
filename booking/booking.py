@@ -69,31 +69,58 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
         req_date = request.date
         movie_id = request.movie
 
+        if not req_date or not movie_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Missing date or movie ID.")
+            return booking_pb2.BookingData()
+
         with app.app_context():
+            # Check if the user already has a booking for this date and movie
             booking = Booking.query.filter_by(user_id=user_id).first()
-            if booking:
-                date = Date.query.filter_by(date=req_date).first()
-                if date:
-                    movie = Movie.query.filter_by(id=movie_id).first()
-                    if movie:
-                        date.movies.append(movie)
-                        db.session.commit()
-                        return booking_pb2.BookingData(
-                            date=date.date,
-                            movieId=[movie.id for movie in date.movies]
-                        )
-                    else:
-                        context.set_code(grpc.StatusCode.NOT_FOUND)
-                        context.set_details(f"Movie with id {movie_id} not found")
-                        return booking_pb2.BookingData()
-                else:
-                    context.set_code(grpc.StatusCode.NOT_FOUND)
-                    context.set_details(f"Date {req_date} not found")
-                    return booking_pb2.BookingData()
-            else:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details(f"User with id {user_id} not found")
+            if booking and any(d.date == req_date and movie_id in [m.id for m in d.movies] for d in booking.dates):
+                context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                context.set_details(f"Booking already exists for user {user_id}")
                 return booking_pb2.BookingData()
+
+            # Retrieve available movies for the selected date from the showtimes service
+            with grpc.insecure_channel('localhost:3002') as channel:
+                stub = showtime_pb2_grpc.ShowtimeStub(channel)
+                movies = stub.GetMovieByDate(showtime_pb2.Date(date=req_date))
+                movies_list = list(movies.movies)
+            channel.close()
+
+            # Check if the requested movie is available for the selected date
+            if movie_id not in movies_list:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Movie not available for the selected date.")
+                return booking_pb2.BookingData()
+
+            # Add the booking for the user
+            if not booking:
+                booking = Booking(user_id=user_id)
+                db.session.add(booking)
+
+            # Check if the date entry already exists, if not, create it
+            date_entry = Date.query.filter_by(date=req_date).first()
+            if not date_entry:
+                date_entry = Date(date=req_date)
+                db.session.add(date_entry)
+
+            # Check if the movie entry already exists, if not, create it
+            movie_entry = Movie.query.filter_by(id=movie_id).first()
+            if not movie_entry:
+                movie_entry = Movie(id=movie_id)
+                db.session.add(movie_entry)
+
+            # Link the movie to the date and the date to the user's booking
+            date_entry.movies.append(movie_entry)
+            booking.dates.append(date_entry)
+
+            db.session.commit()
+
+            return booking_pb2.BookingData(date=req_date, movieId=[movie_id])
+
+
     
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
